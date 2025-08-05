@@ -1,12 +1,13 @@
 import createHttpError from 'http-errors';
 import { createProduct, deleteProduct, getAllProducts, getProductById, updateProduct} from '../services/products.js';
+import { parseFilterParams } from '../utils/parseFilterParams.js';
 
-export const getProductsController = async (
-    req,
-    res,
-      next,
-  ) => {
-        const products = await getAllProducts();
+export const getProductsController = async (req, res, next) => {
+        const {category, maxPrice, minPrice} = parseFilterParams(req.query);
+
+        const userId = req.user._id;
+
+        const products = await getAllProducts({userId, category, maxPrice, minPrice});
 
         res.json({
           status: 200,
@@ -18,7 +19,8 @@ export const getProductsController = async (
 
 export const getProductByIdController = async (req, res) => {
   const { productId } = req.params;
-  const product = await getProductById(productId);
+  const userId = req.user._id;
+  const product = await getProductById(productId, userId);
 
 
   if (!product) {
@@ -33,6 +35,15 @@ export const getProductByIdController = async (req, res) => {
 };
 
 export const createProductController = async (req, res) => {
+
+    console.log('AAAAAAAAAAAAAAA', req.user);
+
+
+    const userId = req.user._id;
+    console.log('req.user._id', req.user._id);
+
+    req.body.userId = userId;
+
     const product = await createProduct(req.body);
 
     res.status(201).json({
@@ -45,7 +56,9 @@ export const createProductController = async (req, res) => {
 export const deleteProductController = async (req, res, next) => {
     const { productId } = req.params;
 
-    const product = await deleteProduct(productId);
+    const userId = req.user._id;
+
+    const product = await deleteProduct(productId, userId);
 
     if (!product) {
       throw createHttpError(404, 'Product not found');
@@ -57,7 +70,9 @@ export const deleteProductController = async (req, res, next) => {
 export const upsertProductController = async (req, res, next) => {
     const { productId } = req.params;
 
-    const result = await updateProduct(productId, req.body, {
+    const userId = req.user._id;
+
+    const result = await updateProduct(productId, userId, req.body, {
       upsert: true,
     });
 
@@ -76,7 +91,9 @@ export const upsertProductController = async (req, res, next) => {
 
 export const patchProductController = async (req, res, next) => {
     const { productId } = req.params;
-    const result = await updateProduct(productId, req.body);
+
+    const userId = req.user._id;
+    const result = await updateProduct(productId,userId, req.body);
 
     if (!result) {
       throw createHttpError(404, 'Product not found');

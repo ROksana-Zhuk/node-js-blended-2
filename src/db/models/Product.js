@@ -19,6 +19,10 @@ const productsSchema = new Schema(
     description: {
       type: String,
     },
+    userId: {
+      type: String,
+      required: true
+    },
   },
   {
     timestamps: true,

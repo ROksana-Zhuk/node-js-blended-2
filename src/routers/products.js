@@ -9,20 +9,35 @@ import {
   patchProductController,
 } from '../controllers/products.js';
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
+import { validateBody } from '../middlewares/validateBody.js';
+import { createProductSchema, updateProductSchema } from '../validation/products.js';
+import { validateId } from '../middlewares/validateId.js';
+import { authenticate } from '../middlewares/authenticate.js';
 
 const router = Router();
 
-router.get('/products', ctrlWrapper(getProductsController));
+router.use(authenticate);
 
-router.get('/products/:productId', ctrlWrapper(getProductByIdController));
 
-router.post('/products', ctrlWrapper(createProductController));
+router.get('/', ctrlWrapper(getProductsController));
 
-router.delete('/products/:productId', ctrlWrapper(deleteProductController));
+router.get('/:productId', validateId, ctrlWrapper(getProductByIdController));
 
-router.put('/products/:productId', ctrlWrapper(upsertProductController));
+router.post('/', validateBody(createProductSchema), ctrlWrapper(createProductController));
 
-router.patch('/products/:productId', ctrlWrapper(patchProductController));
+router.delete('/:productId', validateId, ctrlWrapper(deleteProductController));
+
+router.put(
+    '/:productId',
+    validateId,
+    validateBody(createProductSchema),
+    ctrlWrapper(upsertProductController),
+  );
+
+router.patch('/:productId', validateId, validateBody(updateProductSchema), ctrlWrapper(patchProductController));
+
+
+router.get('/', ctrlWrapper(getProductsController));
 
 export default router;
 
